@@ -1,4 +1,4 @@
-module weiban/customer
+module github.com/DanPlayer/customer
 
 go 1.16
 
