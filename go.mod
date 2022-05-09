@@ -1,4 +1,4 @@
-module github.com/DanPlayer/customer
+module github.com/DanPlayer/timewatch
 
 go 1.16
 
