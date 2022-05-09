@@ -92,11 +92,20 @@ func (w *TimeWatch) AfterFunc(t time.Duration, c Watch, f func()) (r *time.Timer
 }
 
 func (w *TimeWatch) Stop(field string) bool {
+	timer, ok := w.Timer[field]
+	if !ok {
+		return false
+	}
 	_ = w.cache.HDel(w.key, field)
-	return w.Timer[field].Stop()
+	return timer.Stop()
 }
 
 func (w *TimeWatch) Reset(field string, d time.Duration) bool {
+	timer, ok := w.Timer[field]
+	if !ok {
+		return false
+	}
+
 	get, err := w.cache.HGet(w.key, field)
 	if err != nil {
 		return false
@@ -108,13 +117,13 @@ func (w *TimeWatch) Reset(field string, d time.Duration) bool {
 	}
 	c.TouchOffUnix = time.Now().Unix() + int64(d.Seconds())
 
-	if !w.Timer[field].Stop() {
+	if !timer.Stop() {
 		select {
-		case <-w.Timer[field].C: // try to drain the channel
+		case <-timer.C: // try to drain the channel
 		default:
 		}
 	}
-	return w.Timer[field].Reset(d)
+	return timer.Reset(d)
 }
 
 const LockKey = "CheckLock"
