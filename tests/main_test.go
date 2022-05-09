@@ -2,10 +2,10 @@ package tests
 
 import (
 	"fmt"
+	"github.com/DanPlayer/timewatch"
+	"github.com/DanPlayer/timewatch/cache"
 	"testing"
 	"time"
-	timewatch "weiban/customer"
-	"weiban/customer/cache"
 )
 
 func main(m *testing.M) {
