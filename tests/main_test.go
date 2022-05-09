@@ -1,17 +1,17 @@
-# Timewatch
-watch task plan
+package tests
 
-monitoring task plan, general monitoring plan will lose monitoring ability due to service restart
+import (
+	"fmt"
+	"testing"
+	"time"
+	timewatch "weiban/customer"
+	"weiban/customer/cache"
+)
 
-Timewatch can tag lost task and restart it
+func main(m *testing.M) {
+	fmt.Println("here is main test")
+}
 
-### Installation
-```
-$ go get -u github.com/DanPlayer/timewatch
-```
-
-### Example
-```
 func TestSimpleExample(t *testing.T) {
 	var watch = timewatch.Service(timewatch.Options{
 		Key:        "MsgWatch",
@@ -52,4 +52,3 @@ func TestSimpleExample(t *testing.T) {
 	// watch stop
 	timer.Stop()
 }
-```
