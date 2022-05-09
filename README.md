@@ -1,4 +1,6 @@
 # Timewatch
+To [Chinese Doc](https://github.com/DanPlayer/timewatch/blob/main/README_zh.md)
+
 watch task plan
 
 monitoring task plan, general monitoring plan will lose monitoring ability due to service restart
