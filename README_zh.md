@@ -15,7 +15,7 @@ func TestSimpleExample(t *testing.T) {
 	var watch = timewatch.Service(timewatch.Options{
 		Key:        "MsgWatch", // 监控的key
 		Cache:      cache.NewRedis(cache.RedisOptions{
-			Addr:     "127.0.0.1",
+			Addr:     "127.0.0.1:6379",
 			Password: "",
 			DB:       0,
 		}), // 缓存
