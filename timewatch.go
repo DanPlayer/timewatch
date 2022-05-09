@@ -92,10 +92,28 @@ func (w *TimeWatch) AfterFunc(t time.Duration, c Watch, f func()) (r *time.Timer
 }
 
 func (w *TimeWatch) Stop(field string) bool {
+	_ = w.cache.HDel(w.key, field)
 	return w.Timer[field].Stop()
 }
 
 func (w *TimeWatch) Reset(field string, d time.Duration) bool {
+	get, err := w.cache.HGet(w.key, field)
+	if err != nil {
+		return false
+	}
+	var c Watch
+	err = json.Unmarshal([]byte(get), &c)
+	if err != nil {
+		return false
+	}
+	c.TouchOffUnix = time.Now().Unix() + int64(d.Seconds())
+
+	if !w.Timer[field].Stop() {
+		select {
+		case <-w.Timer[field].C: // try to drain the channel
+		default:
+		}
+	}
 	return w.Timer[field].Reset(d)
 }
 
