@@ -87,7 +87,7 @@ func TestCustomizedAttributesExample(t *testing.T) {
 	}
 
 	// check for exception shutdown and restart watch task
-	err = watch.CheckRestart(func(c timewatch.Watch) {
+	err = watch.StartWithCheckRestart(func(c timewatch.Watch) {
 		fmt.Println(c)
 		infoMap := c.CustomizedAttributes.(map[string]interface{})
 		marshal, _ := json.Marshal(infoMap)
