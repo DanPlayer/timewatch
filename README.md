@@ -25,11 +25,8 @@ func TestSimpleExample(t *testing.T) {
 		OutTimeAct: true,
 	})
 
-	// check for exception shutdown and restart watch task
-	err := watch.CheckRestart(func(c timewatch.Watch) {
-		fmt.Println(c)
-		fmt.Println("do that u want")
-	})
+	// start watch service
+	err := watch.Start()
 	if err != nil {
 		fmt.Println(err)
 	}

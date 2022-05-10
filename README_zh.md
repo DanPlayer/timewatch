@@ -22,11 +22,8 @@ func TestSimpleExample(t *testing.T) {
 		OutTimeAct: true, // 重启异常失败的监控时是否执行已经失效的计划
 	})
 
-	// 检查异常关闭的监控计划而且重启它们（不需要重启异常的监控计划可以不使用）
-	err := watch.CheckRestart(func(c timewatch.Watch) {
-		fmt.Println(c)
-		fmt.Println("do that u want")
-	})
+	// 开启监控服务
+	err := watch.Start()
 	if err != nil {
 		fmt.Println(err)
 	}
