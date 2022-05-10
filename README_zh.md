@@ -85,7 +85,7 @@ func TestCustomizedAttributesExample(t *testing.T) {
 	}
 
 	// 检查异常关闭的监控计划而且重启它们
-	err = watch.CheckRestart(func(c timewatch.Watch) {
+	err = watch.StartWithCheckRestart(func(c timewatch.Watch) {
 		fmt.Println(c)
 		infoMap := c.CustomizedAttributes.(map[string]interface{})
 		marshal, _ := json.Marshal(infoMap)
