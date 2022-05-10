@@ -75,6 +75,9 @@ func (w *TimeWatch) CheckRestart(fc func(c Watch)) error {
 }
 
 func (w *TimeWatch) AfterFunc(t time.Duration, c Watch, f func()) (r *time.Timer, err error) {
+	if c.Field == "" {
+		return nil, errors.New("field is empty")
+	}
 	if c.TouchOffUnix == 0 {
 		c.TouchOffUnix = time.Now().Unix() + int64(t.Seconds())
 	}
