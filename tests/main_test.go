@@ -24,11 +24,8 @@ func TestSimpleExample(t *testing.T) {
 		OutTimeAct: true,
 	})
 
-	// check for exception shutdown and restart watch task
-	err := watch.CheckRestart(func(c timewatch.Watch) {
-		fmt.Println(c)
-		fmt.Println("do that u want")
-	})
+	// start watch service
+	err := watch.Start()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -36,7 +33,7 @@ func TestSimpleExample(t *testing.T) {
 	// watch plan add
 	timer, err := watch.AfterFunc(5*time.Second, timewatch.Watch{
 		Field:                "TestField",
-		CustomizedAttributes: nil, // could use some self make that u want set attributes in watch.CheckRestart
+		CustomizedAttributes: nil, // could use some self make that u want set attributes in watch.StartWithCheckRestart
 	}, func() {
 		fmt.Println("plan to func")
 	})
@@ -76,7 +73,7 @@ func TestCustomizedAttributesExample(t *testing.T) {
 		CustomizedAttributes: User{
 			Name: "Dan",
 			Age:  20,
-		}, // could use some self make that u want set attributes in watch.CheckRestart
+		}, // could use some self make that u want set attributes in watch.StartWithCheckRestart
 	}, func() {
 		fmt.Println("plan to func")
 	})
@@ -86,7 +83,7 @@ func TestCustomizedAttributesExample(t *testing.T) {
 	}
 
 	// check for exception shutdown and restart watch task
-	err = watch.CheckRestart(func(c timewatch.Watch) {
+	err = watch.StartWithCheckRestart(func(c timewatch.Watch) {
 		fmt.Println(c)
 		infoMap := c.CustomizedAttributes.(map[string]interface{})
 		marshal, _ := json.Marshal(infoMap)

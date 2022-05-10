@@ -35,11 +35,37 @@ func Service(options Options) *TimeWatch {
 	}
 }
 
-// CheckRestart
+func (w *TimeWatch) Start() error {
+	locked, err := w.lock()
+	if err != nil {
+		return err
+	}
+	if locked {
+		return errors.New("locked by cache")
+	}
+	defer w.unlock()
+
+	// delete stop by abnormal shutdown
+	all, err := w.cache.HGetAll(w.key)
+	if err != nil {
+		return err
+	}
+
+	for k, s := range all {
+		var info Watch
+		_ = json.Unmarshal([]byte(s), &info)
+
+		_ = w.cache.HDel(w.key, k)
+	}
+
+	return nil
+}
+
+// StartWithCheckRestart
 // check and restart task that stop by abnormal shutdown
 // use it in program service start
 // func(c Watch) c is watched attributes
-func (w *TimeWatch) CheckRestart(fc func(c Watch)) error {
+func (w *TimeWatch) StartWithCheckRestart(fc func(c Watch)) error {
 	locked, err := w.lock()
 	if err != nil {
 		return err
