@@ -145,6 +145,11 @@ func (w *TimeWatch) Reset(field string, d time.Duration) bool {
 		return false
 	}
 	c.TouchOffUnix = time.Now().Unix() + int64(d.Seconds())
+	bytes, _ := json.Marshal(c)
+	err = w.cache.HSet(w.key, c.Field, string(bytes))
+	if err != nil {
+		return false
+	}
 
 	if !timer.Stop() {
 		select {
