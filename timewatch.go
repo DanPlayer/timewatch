@@ -3,21 +3,25 @@ package timewatch
 import (
 	"encoding/json"
 	"errors"
+	"github.com/rfyiamcool/go-timewheel"
 	"time"
 )
 
 type TimeWatch struct {
-	key        string                 // marked key
-	watch      Watch                  // watched attributes
-	cache      Cache                  // Redis and MemoryCache and more...
-	Timer      map[string]*time.Timer // watch map key is Watch.Field
-	outTimeAct bool                   // out time to action
+	key        string                      // marked key
+	watch      Watch                       // watched attributes
+	cache      Cache                       // Redis and MemoryCache and more...
+	Timer      map[string]*timewheel.Timer // watch map key is Watch.Field
+	outTimeAct bool                        // out time to action
+	wheel      *timewheel.TimeWheel        // time wheel timer
 }
 
 type Options struct {
-	Key        string // marked key
-	Cache      Cache  // Redis and MemoryCache and more...
-	OutTimeAct bool   // out time to action
+	Key        string        // marked key
+	Cache      Cache         // Redis and MemoryCache and more...
+	OutTimeAct bool          // out time to action
+	Tick       time.Duration // time wheel scale, default 1 * time.Second
+	BucketsNum int           // Time Roulette, default 360
 }
 
 type Watch struct {
@@ -31,8 +35,23 @@ func Service(options Options) *TimeWatch {
 		key:        options.Key,
 		cache:      options.Cache,
 		outTimeAct: options.OutTimeAct,
-		Timer:      map[string]*time.Timer{},
+		Timer:      map[string]*timewheel.Timer{},
+		wheel:      newWheel(options.Tick, options.BucketsNum),
 	}
+}
+
+func newWheel(tick time.Duration, buckets int) *timewheel.TimeWheel {
+	if tick == 0 {
+		tick = 1 * time.Second
+	}
+	if buckets == 0 {
+		buckets = 360
+	}
+	tw, err := timewheel.NewTimeWheel(tick, buckets, timewheel.TickSafeMode())
+	if err != nil {
+		panic(err)
+	}
+	return tw
 }
 
 func (w *TimeWatch) Start() error {
@@ -88,7 +107,7 @@ func (w *TimeWatch) StartWithCheckRestart(fc func(c Watch)) error {
 
 		left := time.Duration(time.Now().Unix()-info.TouchOffUnix) * time.Second
 		if left > 0 {
-			time.AfterFunc(left, func() {
+			w.wheel.AfterFunc(left, func() {
 				fc(info)
 			})
 		} else {
@@ -100,7 +119,7 @@ func (w *TimeWatch) StartWithCheckRestart(fc func(c Watch)) error {
 	return nil
 }
 
-func (w *TimeWatch) AfterFunc(t time.Duration, c Watch, f func()) (r *time.Timer, err error) {
+func (w *TimeWatch) AfterFunc(t time.Duration, c Watch, f func()) (r *timewheel.Timer, err error) {
 	if c.Field == "" {
 		return nil, errors.New("field is empty")
 	}
@@ -112,7 +131,7 @@ func (w *TimeWatch) AfterFunc(t time.Duration, c Watch, f func()) (r *time.Timer
 	if err != nil {
 		return
 	}
-	timer := time.AfterFunc(t, func() {
+	timer := w.wheel.AfterFunc(t, func() {
 		_ = w.cache.HDel(w.key, c.Field)
 		f()
 	})
@@ -120,44 +139,38 @@ func (w *TimeWatch) AfterFunc(t time.Duration, c Watch, f func()) (r *time.Timer
 	return timer, nil
 }
 
-func (w *TimeWatch) Stop(field string) bool {
+func (w *TimeWatch) Stop(field string) {
 	timer, ok := w.Timer[field]
 	if !ok {
-		return false
+		return
 	}
 	_ = w.cache.HDel(w.key, field)
-	return timer.Stop()
+	timer.Stop()
 }
 
-func (w *TimeWatch) Reset(field string, d time.Duration) bool {
+func (w *TimeWatch) Reset(field string, d time.Duration) {
 	timer, ok := w.Timer[field]
 	if !ok {
-		return false
+		return
 	}
 
 	get, err := w.cache.HGet(w.key, field)
 	if err != nil {
-		return false
+		return
 	}
 	var c Watch
 	err = json.Unmarshal([]byte(get), &c)
 	if err != nil {
-		return false
+		return
 	}
 	c.TouchOffUnix = time.Now().Unix() + int64(d.Seconds())
 	bytes, _ := json.Marshal(c)
 	err = w.cache.HSet(w.key, c.Field, string(bytes))
 	if err != nil {
-		return false
+		return
 	}
 
-	if !timer.Stop() {
-		select {
-		case <-timer.C: // try to drain the channel
-		default:
-		}
-	}
-	return timer.Reset(d)
+	timer.Reset(d)
 }
 
 const LockKey = "CheckLock"
