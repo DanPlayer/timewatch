@@ -14,7 +14,7 @@ func main(m *testing.M) {
 }
 
 func TestSimpleExample(t *testing.T) {
-	var watch = timewatch.Service(timewatch.Options{
+	var watch = timewatch.New(timewatch.Options{
 		Key: "MsgWatch",
 		Cache: cache.NewRedis(cache.RedisOptions{
 			Addr:     "127.0.0.1:6379",
@@ -25,10 +25,11 @@ func TestSimpleExample(t *testing.T) {
 	})
 
 	// start watch service
-	err := watch.Start()
+	err := watch.StartService()
 	if err != nil {
 		fmt.Println(err)
 	}
+	defer watch.StopService()
 
 	// watch plan add
 	_, err = watch.AfterFunc(5*time.Second, timewatch.Watch{
@@ -57,7 +58,7 @@ func TestCustomizedAttributesExample(t *testing.T) {
 		Age  int
 	}
 
-	var watch = timewatch.Service(timewatch.Options{
+	var watch = timewatch.New(timewatch.Options{
 		Key: "MsgWatch",
 		Cache: cache.NewRedis(cache.RedisOptions{
 			Addr:     "127.0.0.1:6379",

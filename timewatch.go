@@ -34,7 +34,7 @@ type Watch struct {
 	CustomizedAttributes interface{} `json:"customized_attributes"` // customized struct or other
 }
 
-func Service(options Options) *TimeWatch {
+func New(options Options) *TimeWatch {
 	ip, err := lower16BitPrivateIP()
 	if err != nil {
 		return nil
@@ -63,7 +63,7 @@ func newWheel(tick time.Duration, buckets int) *timewheel.TimeWheel {
 	return tw
 }
 
-func (w *TimeWatch) Start() error {
+func (w *TimeWatch) StartService() error {
 	locked, err := w.lock()
 	if err != nil {
 		return err
@@ -72,6 +72,9 @@ func (w *TimeWatch) Start() error {
 		return errors.New("locked by cache")
 	}
 	defer w.unlock()
+
+	// start wheel
+	w.wheel.Start()
 
 	// delete stop by abnormal shutdown
 	all, err := w.cache.HGetAll(w.getCacheKey())
@@ -87,6 +90,10 @@ func (w *TimeWatch) Start() error {
 	}
 
 	return nil
+}
+
+func (w *TimeWatch) StopService() {
+	w.wheel.Stop()
 }
 
 // StartWithCheckRestart
