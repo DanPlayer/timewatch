@@ -31,7 +31,7 @@ func TestSimpleExample(t *testing.T) {
 	}
 
 	// watch plan add
-	timer, err := watch.AfterFunc(5*time.Second, timewatch.Watch{
+	_, err = watch.AfterFunc(5*time.Second, timewatch.Watch{
 		Field:                "TestField",
 		CustomizedAttributes: nil, // could use some self make that u want set attributes in watch.StartWithCheckRestart
 	}, func() {
@@ -43,12 +43,12 @@ func TestSimpleExample(t *testing.T) {
 	}
 
 	// watch reset
-	timer.Reset(10 * time.Second)
+	watch.Reset("TestField", 10 * time.Second)
 
-	time.Sleep(11 * time.Second)
+	time.Sleep(15 * time.Second)
 
 	// watch stop
-	timer.Stop()
+	watch.Stop("TestField")
 }
 
 func TestCustomizedAttributesExample(t *testing.T) {
